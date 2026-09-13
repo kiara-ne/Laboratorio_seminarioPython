@@ -13,7 +13,7 @@ def listar_productos():
 # GET es para obtener, en este caso con id especifico
 @app.get("/productos/{id}")
 def obtener_producto(id: int):
-    producto = session.query(Producto).filter(Producto.id == id).first()
+    producto = session.query(Producto).get(id)
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return vars(producto)
@@ -35,12 +35,29 @@ def agregar_producto(datos_producto):  ####Me da error porque no sabe que es dat
     return vars(producto_nuevo)
 
 
+#PUT , para modificar recursos existentes
+@app.put("/productos/{id}")
+def modificar_producto (id:int, datos_producto):
+
+    producto = session.query(Producto).get(id)
+    if producto is None:
+        raise HTTPException (status_code=404, detail="Producto no encontrado")
+
+    try:
+        producto.nombre = datos_producto.nombre
+        producto.precio = datos_producto.precio
+        session.commit()
+        return vars(producto) #Devuelve el producto
+    except Exception as e:
+        session.rollback()
+        raise HTTPException (status_code=500, detail="Error inesperado en el servidor")
+
 
 # DELETE, para eliminar en este caso un producto
 @app.delete("/productos/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_producto (id: int):
 
-    producto = session.query(Producto).filter(Producto.id == id).first()
+    producto = session.query(Producto).get(id)
 
     if producto is None:
      raise HTTPException(status_code=404, detail="Producto no encontrado")
